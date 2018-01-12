@@ -8,6 +8,8 @@ This repo is made up of **4** scripts, which are supposed to be run in the same 
 4.  <code>**dump_recommendations.py**</code>
 
 ## 1. <code>**dump_paths.py**</code>
+The first stage of the pipeline is accomplished by this script. This can be invoked as follows:
+<code>**> ./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
 
 ## 2. <code>**tweak_features.py**</code>
 
