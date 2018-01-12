@@ -7,12 +7,11 @@ This repo is made up of **4** scripts, which are supposed to be run in the same 
 3.  <code>**compute_tweaking_costs.py**</code>
 4.  <code>**dump_recommendations.py**</code>
 
-# 1. <code>**dump_paths.py**</code>
-## GOAL:
+## 1. <code>**dump_paths.py**</code>
 
-# 2. <code>**tweak_features.py**</code>
+## 2. <code>**tweak_features.py**</code>
 
-# 3. <code>**compute_tweaking_costs.py**</code>
+## 3. <code>**compute_tweaking_costs.py**</code>
 
-# 4. <code>**dump_recommendations.py**</code>
+## 4. <code>**dump_recommendations.py**</code>
 
