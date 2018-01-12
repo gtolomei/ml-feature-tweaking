@@ -1,5 +1,18 @@
 # ml-feature-tweaking
 Source code associated with the KDD 2017 research paper entitled "_Interpretable Predictions of Tree-based Ensembles via Actionable Feature Tweaking_" \[paper is available at: [arXiv.org](https://arxiv.org/abs/1706.06691)\]
 
-This repo is made up of **4** scripts, which are as follows:
--  <code>**dump_paths.py**</code>
+This repo is made up of **4** scripts, which are supposed to be run in the same order as follows:
+1.  <code>**dump_paths.py**</code>
+2.  <code>**tweak_features.py**</code>
+3.  <code>**compute_tweaking_costs.py**</code>
+4.  <code>**dump_recommendations.py**</code>
+
+# 1. <code>**dump_paths.py**</code>
+## GOAL:
+
+# 2. <code>**tweak_features.py**</code>
+
+# 3. <code>**compute_tweaking_costs.py**</code>
+
+# 4. <code>**dump_recommendations.py**</code>
+
