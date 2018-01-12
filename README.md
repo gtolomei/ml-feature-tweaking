@@ -10,7 +10,7 @@ This repo is made up of **4** scripts which are supposed to be run in the same o
 ## 1. <code>**dump_paths.py**</code>
 The first stage of the pipeline is accomplished by this script. This can be invoked as follows:
 
-<code>**> ./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
+<code>**./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
 
 where<br />
 <code>**${PATH_TO_SERIALIZED_MODEL}**</code> is the path to the (binary) file containing a serialized, trained binary classifier (i.e., a <code>**scikit-learn**</code> tree-based ensemble estimator).<br />
@@ -28,7 +28,7 @@ where<br />
 ## 2. <code>**tweak_features.py**</code>
 The second stage of the pipeline is actually the _core_ of the entire process. The script can be run as follows:
 
-<code>** ./tweak_features.py ${PATH_TO_DATASET} ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_POSITIVE_PATHS_FILE} ${PATH_TO_OUTPUT_FILE} \[--epsilon=x\]**</code>
+<code>**./tweak_features.py ${PATH_TO_DATASET} ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_POSITIVE_PATHS_FILE} ${PATH_TO_OUTPUT_FILE} \[--epsilon=x\]**</code>
 
 ## 3. <code>**compute_tweaking_costs.py**</code>
 
