@@ -28,7 +28,7 @@ where<br />
 ## 2. <code>**tweak_features.py**</code>
 The second stage of the pipeline is actually the _core_ of the entire process. The script can be run as follows:
 
-<code>**> ./tweak_features.py ${PATH_TO_DATASET} ${PATH_TO_SERIALIZED_MODEL} \
+<code>** ./tweak_features.py ${PATH_TO_DATASET} ${PATH_TO_SERIALIZED_MODEL} \
   
   ${PATH_TO_POSITIVE_PATHS_FILE} ${PATH_TO_OUTPUT_FILE} \[--epsilon=\]**</code>
 
