@@ -12,12 +12,12 @@ The first stage of the pipeline is accomplished by this script. This can be invo
 
 <code>**> ./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
 
-where 
-
-<code>**${PATH_TO_SERIALIZED_MODEL}**</code> is the path to the (binary) file containing a serialized, trained <code>**scikit-learn**</code> estimator (i.e., model).
-<code>**${PATH_TO_OUTPUT_FILE}**</code>
+where<br />
+<code>**${PATH_TO_SERIALIZED_MODEL}**</code> is the path to the (binary) file containing a serialized, trained binary classifier (i.e., a <code>**scikit-learn**</code> tree-based ensemble estimator).<br />
+<code>**${PATH_TO_OUTPUT_FILE}**</code> is the path where the output file will be stored. This file will contain a plain-text representation of all the _positive paths_, namely all the paths extracted from all the trees in the ensemble whose leaves are labeled as _positive_.
 
 ## 2. <code>**tweak_features.py**</code>
+The second stage of the pipeline is actually the _core_ of the entire process. 
 
 ## 3. <code>**compute_tweaking_costs.py**</code>
 
