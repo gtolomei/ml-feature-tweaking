@@ -12,7 +12,7 @@ The first stage of the pipeline is accomplished by this script. This can be invo
 
 <code>**> ./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
 
-where ${PATH_TO_SERIALIZED_MODEL} is the path to the (binary) file containing a serialized, trained <code>**scikit-learn**</code> estimator (i.e., model).
+where <code>**${PATH_TO_SERIALIZED_MODEL}**</code> is the path to the (binary) file containing a serialized, trained <code>**scikit-learn**</code> estimator (i.e., model).
 
 ## 2. <code>**tweak_features.py**</code>
 
