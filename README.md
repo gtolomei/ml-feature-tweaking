@@ -14,7 +14,16 @@ The first stage of the pipeline is accomplished by this script. This can be invo
 
 where<br />
 <code>**${PATH_TO_SERIALIZED_MODEL}**</code> is the path to the (binary) file containing a serialized, trained binary classifier (i.e., a <code>**scikit-learn**</code> tree-based ensemble estimator).<br />
-<code>**${PATH_TO_OUTPUT_FILE}**</code> is the path where the output file will be stored. This file will contain a plain-text representation of all the _positive paths_, namely all the paths extracted from all the trees in the ensemble whose leaves are labeled as _positive_.
+<code>**${PATH_TO_OUTPUT_FILE}**</code> is the path where the output file will be stored. This file will contain a plain-text representation of all the _positive paths_, namely all the paths extracted from all the trees in the ensemble whose leaves are labeled as _positive_.<br />
+Each line of the output file is a positive path, and each positive is a sequence of boolean tests with the following format:
+
+<code>**[tree_id, [(feature_id, op, value), ..., (feature_id, op, value)]**</code>
+
+where<br />
+<code>**tree_id**</code> is the unique id of the tree within the ensemble.<br />
+<code>**feature_id**</code> is the unique id of the feature subject of the test.<br />
+<code>**op**</code> is the operator of the test: either <code>**'<='**</code> or <code>**'>'**</code>.<br />
+<code>**value**</code> is the value against which the feature is tested.
 
 ## 2. <code>**tweak_features.py**</code>
 The second stage of the pipeline is actually the _core_ of the entire process. 
