@@ -8,27 +8,27 @@ This repo is made up of **4** scripts which are supposed to be run in the same o
 4.  <code>**dump_recommendations.py**</code>
 
 ## 1. <code>**dump_paths.py**</code>
-The first stage of the pipeline is accomplished by this script. This can be invoked as follows:
+The first stage of the pipeline is accomplished by this script, which can be invoked as follows:
 
-<code>**./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
+><code>**./dump_paths.py ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_OUTPUT_FILE}**</code>
 
 where<br />
 <code>**${PATH_TO_SERIALIZED_MODEL}**</code> is the path to the (binary) file containing a serialized, trained binary classifier (i.e., a <code>**scikit-learn**</code> tree-based ensemble estimator).<br />
 <code>**${PATH_TO_OUTPUT_FILE}**</code> is the path where the output file will be stored. This file will contain a plain-text representation of all the _positive paths_, namely all the paths extracted from all the trees in the ensemble whose leaves are labeled as _positive_.<br />
-Each line of the output file is a positive path, and each positive is a sequence of boolean tests with the following format:
+Each line of the output file is a positive path, which in turn is a sequence of boolean tests with the following format:
 
 <code>**[tree_id, [(feature_id, op, value), ..., (feature_id, op, value)]**</code>
 
-where<br />
-<code>**tree_id**</code> is the unique id of the tree within the ensemble.<br />
-<code>**feature_id**</code> is the unique id of the feature subject of the test.<br />
-<code>**op**</code> is the operator of the test: either <code>**'<='**</code> or <code>**'>'**</code>.<br />
-<code>**value**</code> is the value against which the feature is tested.
+where:<br />
+-  <code>**tree_id**</code> is the unique id of the tree within the ensemble.<br />
+-  <code>**feature_id**</code> is the unique id of the feature subject of the test.<br />
+-  <code>**op**</code> is the operator of the test: either <code>**'<='**</code> or <code>**'>'**</code>.<br />
+-  <code>**value**</code> is the value against which the feature is tested.
 
 ## 2. <code>**tweak_features.py**</code>
 The second stage of the pipeline is actually the _core_ of the entire process. The script can be run as follows:
 
-<code>**./tweak_features.py ${PATH_TO_DATASET} ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_POSITIVE_PATHS_FILE} ${PATH_TO_OUTPUT_FILE} \[--epsilon=x\]**</code>
+><code>**./tweak_features.py ${PATH_TO_DATASET} ${PATH_TO_SERIALIZED_MODEL} ${PATH_TO_POSITIVE_PATHS_FILE} ${PATH_TO_OUTPUT_FILE} \[--epsilon=x\]**</code>
 
 where<br />
 <code>**${PATH_TO_DATASET}**</code> is the path to the dataset file used to train the binary classifier. This is assumed to be either a <code>**.tsv**</code> or a <code>**.csv**</code> file, where each line is an instance and each field is a feature. The very last field is supposed to be the target label (named <code>**'class'**</code>).<br />
@@ -37,6 +37,14 @@ where<br />
 <code>**${PATH_TO_OUTPUT_DIRECTORY}**</code> is the path to the directory where the output file will be stored. This file will be called <code>**transformations_${EPSILON}.tsv**</code>, where <code>**${EPSILON}**</code> is the value of <code>**epsilon**</code> optional argument (by default <code>**epsilon=0.1**</code>).
 
 ## 3. <code>**compute_tweaking_costs.py**</code>
+Once the set of _candidate feature transformations_ (i.e., tweakings) have been successfully calculated, we can measure the actual costs of those transformations. This can be achieved by running the following script:
+
+><code>**python compute_tweaking_costs.py  ${PATH_TO_DATASET} ${PATH_TO_TRANSFORMATIONS} ${PATH_TO_OUTPUT_DIRECTORY} --costfuncs=unmatched_component_rate,euclidean_distance,cosine_distance,jaccard_distance,pearson_correlation_distance**</code>
+
+where<br />
+<code>**${PATH_TO_DATASET}**</code> is the path to the dataset file used to train the binary classifier, as above.<br />
+<code>**${PATH_TO_TRANSFORMATIONS}**</code> is the path to the file containing the candidate transformation obtained with step 2.<br />
+<code>**${PATH_TO_OUTPUT_DIRECTORY}**</code> is the path to the directory where the output file will be stored.
 
 ## 4. <code>**dump_recommendations.py**</code>
 
