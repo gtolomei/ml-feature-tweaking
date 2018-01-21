@@ -197,9 +197,9 @@ def compute_transformation_cost(x, x_prime, costfunc):
 def create_tweaked_costs_dataframe(X, X_tweaked, costfuncs):
 
     # build the heder for the cost DataFrame
-    costs_header = ['instance_id', 'tree_id', 'path_id', 'path_length'] + costfuncs
+    costs_header = ['id', 'tree_id', 'path_id', 'path_length'] + costfuncs
     # build the header for the DataFrame containing the signed transformations
-    signs_header = ['instance_id'] + X.columns.values.tolist()
+    signs_header = ['id'] + X.columns.values.tolist()
 
     costs_rows = []
     signs_rows = []
@@ -252,7 +252,7 @@ def create_tweaked_costs_dataframe(X, X_tweaked, costfuncs):
 
                 # append the record for the DataFrame of costs
                 costs_rows.append(tuple(costs_record))
-                # create the record made of instance_id and the difference between
+                # create the record made of instance id and the difference between
                 # feature values
                 signs_record.extend(np.subtract(x_prime, x))
                 # append the record for the DataFrame of transformation signs
@@ -272,9 +272,9 @@ def create_tweaked_costs_dataframe(X, X_tweaked, costfuncs):
     logger.info("Finally, return the DataFrames containing the results")
 
     costs_df = pd.DataFrame(
-        costs_rows, columns=costs_header).set_index('instance_id')
+        costs_rows, columns=costs_header).set_index('id')
     signs_df = pd.DataFrame(
-        signs_rows, columns=signs_header).set_index('instance_id')
+        signs_rows, columns=signs_header).set_index('id')
 
     return costs_df, signs_df
 
