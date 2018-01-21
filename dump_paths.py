@@ -249,10 +249,13 @@ def dump_paths(paths, output_file_name):
 def main():
     options = parse_options()
 
+    # Load the serialized model (i.e., the tree ensemble)
     model = load_model(options['model'])
 
+    # Compute positive paths from the loaded tree ensemble
     hi_paths = enumerate_paths(model)
 
+    # Save positive paths to disk
     dump_paths(hi_paths, options['output'])
 
 
