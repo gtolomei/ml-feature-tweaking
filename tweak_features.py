@@ -489,6 +489,7 @@ def main(options):
     header = ['id', 'tree_id', 'path_id',
               'path_length'] + list(X.columns.values)
 
+    # Save epsilon-transformations to disk
     logger.info("Save the computed epsilon-transformations to %s" %
                 options['output_dirname'] + '/transformations_' + str(options['epsilon']) + '.tsv')
     save_epsilon_transformations(X_negatives_transformations, options[
