@@ -9,24 +9,9 @@ import os
 import argparse
 import logging
 import logging.handlers
-import math
 import ast
-import json
 import pandas as pd
-import numpy as np
 import multiprocessing as mp
-from scipy.stats import *
-from sklearn.metrics import SCORERS
-from sklearn.cross_validation import cross_val_score
-from sklearn.cross_validation import train_test_split
-from sklearn.metrics import classification_report
-from sklearn.grid_search import GridSearchCV
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
 
 # console logging format
@@ -95,7 +80,6 @@ def get_options(cmd_args=None):
     options = {}
     options['dataset_filename'] = args.dataset_filename
     options['model_filename'] = args.model_filename
-    options['index_filename'] = args.index_filename
     options['paths_filename'] = args.paths_filename
     options['output_dirname'] = args.output_dirname
     options['epsilon'] = args.epsilon
@@ -466,7 +450,7 @@ def main(options):
     # Loading model
     model = loading_model(options['model_filename'])
 
-    logger.info("Loading index from " + options['paths_filename'])
+    logger.info("Loading positive paths from " + options['paths_filename'])
     # Loading the positive paths of the model
     paths = loading_paths(options['paths_filename'])
 
