@@ -1,11 +1,13 @@
 # Tweaking Features of Ensembles of Machine-Learned Trees
-Source code associated with the KDD 2017 research paper entitled "_Interpretable Predictions of Tree-based Ensembles via Actionable Feature Tweaking_" \[paper is available at: [arXiv.org](https://arxiv.org/abs/1706.06691)\]
+Source code associated with the KDD 2017 research paper entitled "_Interpretable Predictions of Tree-based Ensembles via Actionable Feature Tweaking_" \[available at: [arXiv.org](https://arxiv.org/abs/1706.06691)\]
 
-This repo is made up of **4** scripts which are supposed to be run in the same order as follows:
+**NOTE:** _This work has been developed by the authors of the paper while working at Yahoo Labs, London, UK. Although the method proposed is general and applicable to several different domains, the authors validate it on an online advertising use case. In particular, they demonstrate the ability of this approach to generate **actionable recommendations** for improving the quality of the ads served by Yahoo Gemini.<br /> 
+Due to confidentiality, any business-related detail has been removed from this repository, which however can still be used by other researchers working on similar topics, such as ML model interpretability or adversarial ML just to name a few._
+
+This repo is made up of **3** scripts which are supposed to be run in the same order as follows:
 1.  <code>**dump_paths.py**</code>
 2.  <code>**tweak_features.py**</code>
 3.  <code>**compute_tweaking_costs.py**</code>
-4.  <code>**dump_recommendations.py**</code>
 
 ## 1. <code>**dump_paths.py**</code>
 The first stage of the pipeline is accomplished by this script, which can be invoked as follows:
@@ -57,7 +59,6 @@ where:<br />
 <code>**${PATH_TO_OUTPUT_DIRECTORY}**</code> is the path to the directory where the output file will be stored.
 Finally, the optional argument <code>**costfuncs**</code> will contain a list of functions used to compute the cost of each transformation (default <code>**costfuncs=euclidean_distance**</code>.
 
-The ultimate result of this step is the creation of 2 tsv files inside <code>**${PATH_TO_OUTPUT_DIRECTORY}**</code> containing the costs and the signs of each transformation.
+The ultimate result of this step is the creation of 2 tsv files inside <code>**${PATH_TO_OUTPUT_DIRECTORY}**</code> containing the _costs_ and the _signs_ of each transformation.
 
-## 4. <code>**dump_recommendations.py**</code>
-
+Additional steps can be performed using those files as input, depending on the final task goal.
