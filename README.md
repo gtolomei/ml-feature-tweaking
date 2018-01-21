@@ -2,7 +2,7 @@
 Source code associated with the KDD 2017 research paper entitled "_Interpretable Predictions of Tree-based Ensembles via Actionable Feature Tweaking_" \[available at: [arXiv.org](https://arxiv.org/abs/1706.06691)\]
 
 **NOTE:** _This work has been developed by the authors of the paper while working at Yahoo Labs, London, UK. Although the method proposed is general and applicable to several different domains, the authors validate it on an online advertising use case. In particular, they demonstrate the ability of this approach to generate **actionable recommendations** for improving the quality of the ads served by Yahoo Gemini.<br /> 
-Due to confidentiality, any business-related detail has been removed from this repository, which however can still be used by other researchers working on similar topics, such as ML model interpretability or adversarial ML just to name a few._
+Due to confidentiality, any business-related detail has been removed from this repository, which however can still be used by other researchers working on related topics, such as ML model interpretability or adversarial ML just to name a few._
 
 This repo is made up of **3** scripts which are supposed to be run in the same order as follows:
 1.  <code>**dump_paths.py**</code>
