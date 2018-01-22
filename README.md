@@ -64,7 +64,7 @@ The ultimate result of this step is the creation of 2 tsv files inside <code>**$
 Additional steps can be performed using those files as input, depending on the final task goal.
 
 ## Citation
-If you use this implementation in you work, please add a reference/citation to the paper. You can use the following BibTeX entry:
+If you use this implementation in your work, please add a reference/citation to the paper. You can use the following BibTeX entry:
 
 ```bash
 @inproceedings{DBLP:conf/kdd/TolomeiSHL17,
