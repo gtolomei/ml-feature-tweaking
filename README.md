@@ -1,6 +1,5 @@
 # Tweaking Features of Ensembles of Machine-Learned Trees
 This repository contains the source code associated with the method proposed by Tolomei _et al._ in their KDD 2017 research paper entitled "_Interpretable Predictions of Tree-based Ensembles via Actionable Feature Tweaking_" \[more information available at: [KDD 2017 website](http://www.kdd.org/kdd2017/papers/view/interpretable-predictions-of-tree-based-ensembles-via-actionable-feature-tw) or [arXiv.org](https://arxiv.org/abs/1706.06691)\]<br />
-Please, consider citing this work using the following [BibTeX entry](http://dblp.uni-trier.de/rec/bibtex/conf/kdd/TolomeiSHL17).
 
 **NOTE:** _This work has been developed by the authors of the paper while working at Yahoo Labs, London, UK. Although the method proposed is general and applicable to several different domains, the authors validate it on an online advertising use case. In particular, they demonstrate the ability of this approach to generate **actionable recommendations** for improving the quality of the ads served by Yahoo Gemini.<br /> 
 Due to confidentiality, any business-related detail has been removed from this repository, which however can still be used by other researchers working on related topics, such as ML model interpretability or adversarial ML just to name a few._
@@ -63,3 +62,28 @@ Finally, the optional argument <code>**costfuncs**</code> will contain a list of
 The ultimate result of this step is the creation of 2 tsv files inside <code>**${PATH_TO_OUTPUT_DIRECTORY}**</code> containing the _costs_ and the _signs_ of each transformation.
 
 Additional steps can be performed using those files as input, depending on the final task goal.
+
+## Citation
+If you use this implementation in you work, please add a reference/citation to the paper. You can use the following BibTeX entry:
+
+```bash
+@inproceedings{DBLP:conf/kdd/TolomeiSHL17,
+  author    = {Gabriele Tolomei and
+               Fabrizio Silvestri and
+               Andrew Haines and
+               Mounia Lalmas},
+  title     = {Interpretable Predictions of Tree-based Ensembles via Actionable Feature
+               Tweaking},
+  booktitle = {Proceedings of the 23rd {ACM} {SIGKDD} International Conference on
+               Knowledge Discovery and Data Mining, Halifax, NS, Canada, August 13
+               - 17, 2017},
+  pages     = {465--474},
+  year      = {2017},
+  crossref  = {DBLP:conf/kdd/2017},
+  url       = {http://doi.acm.org/10.1145/3097983.3098039},
+  doi       = {10.1145/3097983.3098039},
+  timestamp = {Tue, 15 Aug 2017 16:11:01 +0200},
+  biburl    = {http://dblp.org/rec/bib/conf/kdd/TolomeiSHL17},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
+}
+```
