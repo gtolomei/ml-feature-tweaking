@@ -36,7 +36,7 @@ console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 # create a rotating file handler associated with an external file
 file_handler = logging.handlers.RotatingFileHandler(
-    "../log/cost_functions.log", mode='w', maxBytes=(1048576 * 5), backupCount=2, encoding=None, delay=0)
+    "cost_functions.log", mode='w', maxBytes=(1048576 * 5), backupCount=2, encoding=None, delay=0)
 # set the file handler logging format
 file_logging_format = logging.Formatter(FILE_LOGGING_FORMAT)
 # specify the logging format for this file handler
