@@ -222,10 +222,14 @@ def create_tweaked_costs_dataframe(X, X_tweaked, costfuncs):
             logger.info("There are {} positive transformations associated with the true negative instance x [ID#{}]".format(
                 len(x_primes), i))
             for row in x_primes.iterrows():
-                tree_id = int(row[1][0])
-                path_id = int(row[1][1])
-                path_length = int(row[1][2])
-                x_prime = row[1][3:]
+                # tree_id = int(row[1][0])
+                # path_id = int(row[1][1])
+                # path_length = int(row[1][2])
+                # x_prime = row[1][3:]
+                tree_id = int(row[1][1])
+                path_id = int(row[1][2])
+                path_length = int(row[1][3])
+                x_prime = row[1][4:]
                 costs_record = [i, tree_id, path_id, path_length]
                 signs_record = [i]
                 logger.debug(
