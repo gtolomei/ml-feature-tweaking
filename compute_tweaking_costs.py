@@ -209,7 +209,9 @@ def create_tweaked_costs_dataframe(X, X_tweaked, costfuncs):
             "Check if there are any positive transformations associated with the true negative instance x [ID#{}]".format(i))
 
         if i in X_tweaked.index:
+            print(i)
             x = X.ix[i]
+            print(x)
             logger.debug(
                 "Transform the original feature vector x into a numpy.array object")
             x = np.asarray(x)
@@ -219,6 +221,7 @@ def create_tweaked_costs_dataframe(X, X_tweaked, costfuncs):
             # by encapsulating the index i into a list we are guaranteed to
             # always get back a pandas.DataFrame object
             x_primes = X_tweaked.ix[[i]]
+            print(x_primes)
             logger.info("There are {} positive transformations associated with the true negative instance x [ID#{}]".format(
                 len(x_primes), i))
             for row in x_primes.iterrows():
@@ -306,6 +309,8 @@ def main(options):
         "Selecting features of only (true) negative instances from the portion of dataset indexed")
     # Features
     X = dataset.iloc[:, :len(dataset.columns) - 1]
+
+    #tweaked_dataset.set_index("id", inplace=True)
 
     tweaked_costs_df, tweaked_signs_df = create_tweaked_costs_dataframe(
         X, tweaked_dataset, options['costfuncs'])
