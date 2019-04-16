@@ -206,13 +206,12 @@ def loading_paths(paths_filename):
 # path ##
 
 
-def compute_epsilon_transformation(x, path, epsilon, cache):
+def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
     """
     This function computes the epsilon-transformation of an original instance x, associated with
     the boolean conditions encoded in the specified path
 
     Args:
-        x (pandas.Series or numpy.ndarray): the original instance x = (x_0, x_1, ..., x_{n-1})
         path (list(tuple)): encoding of a root-to-leaf path of a decision tree as
                             [(0, <dir>, theta_0), ..., (n-1, <dir>, theta_{n-1})] 
                             where each (i, <dir>, theta_i) encodes a boolean condition as follows
@@ -223,26 +222,22 @@ def compute_epsilon_transformation(x, path, epsilon, cache):
                             (Note: the discrepancy of the indices derives from the fact that features are 0-based indexed on the path,
                             although usually they are referred using 1-based notation)
         epsilon (float): tolerance used to pass the tests encoded in path
+        size (int): number of total element (i.e., features) of the (syntetic) k-labelled instance
+        dtype (numpy.dtype): dtype associated with the elements of the returned instance
 
     Returns:
-        x_prime (numpy.ndarray): a synthetic instance x_prime from the original x, such that it satisfies 
+        x_synt (numpy.ndarray): a synthetic instance, such that it satisfies 
                                 the conditions encoded in path with an epsilon tolerance
-                                For example, if x = (1.2, -3.7, 0.8) and path = [(0, <=, 1.5), (1, <=, -4)]
-                                x_prime = (1.2, -4-epsilon, 0.8)
-                                Indeed, the first boolean condition encoded in the path states that
-                                - (x_{0+1} <= 1.5) = (x_1 <= 1.5) Since x_1 = 1.2 this condition is already satisfied
-                                - (x_{1+1} <= -4) = (x_2 <= -4) Since x_2 = -3.7 this value must be changed accordingly
-                                so to satisfy the path, namely we set x_2 = -4-epsilon
-                                - Finally, since there is no condition for x_3, we let it as it is.
+                                For example, if path = [(0, >, 1.5), (2, <=, -4)] and size = 5
+                                x_synt = (1.5+epsilon, 0, -4-epsilon, 0, 0)
     """
 
     logger = logging.getLogger(__name__)
 
-    # # Copy the original input vector using pandas.Series.copy() method
-    x_prime = x.copy()
-
     logger.debug("Loop through all the conditions encoded in the path")
     i = 1
+
+    x_synt = np.zeros(size, dtype=dtype)
 
     for cond in path:
         feature = cond[0]  # feature id
@@ -252,12 +247,12 @@ def compute_epsilon_transformation(x, path, epsilon, cache):
         # 1. if we already examined this condition for this instance x then
         # we just retrieve the correct feature value for the transformed
         # instance x'
-        logger.debug("Check if path condition n. {} = [(x_{}, {}, {})] has been already examined for this instance x...".format(
+        logger.debug("Check if path condition n. {} = [(x_{}, {}, {})] has been already examined".format(
             i, feature, direction, threshold))
         if cond in cache:
-            logger.debug("!!!!! CACHE HIT !!!!!! Path condition n. {} = [(x_{}, {}, {})] has been already examined for this instance x! Let's change x_{} = {} to {:.5f}".format(
-                i, feature, direction, threshold, feature, x[feature], cache[cond]))
-            x_prime[feature] = cache[cond]
+            logger.debug("!!!!! CACHE HIT !!!!!! Path condition n. {} = [(x_{}, {}, {})] has been already examined! Let's change x_{} to {:.5f}".format(
+                i, feature, direction, threshold, feature, cache[cond]))
+            x_synt[feature] = cache[cond]
         # 2. otherwise, we must compute the new feature value for the
         # transformed instance x'
         else:
@@ -267,47 +262,62 @@ def compute_epsilon_transformation(x, path, epsilon, cache):
             # Negative Direction Case: (x_i, theta_i, <=) ==> x_i must be less than or equal
             # to theta_i (x_i <= theta_i)
             if direction == "<=":
-                logger.debug("Direction is \"{}\"".format(direction))
-                logger.debug("Condition n. {} is about feature x_{} = {}: ({} {} {})?".format(
-                    i, feature, x[feature], x[feature], direction, threshold))
-                if x[feature] <= threshold:
-                    logger.debug("Condition n. {} is already verified by x as x_{} = {} {} {}".format(
-                        i, feature, x[feature], direction, threshold))
-                else:
-                    logger.debug("Condition n. {} is broken by x as x_{} = {} > {}".format(
-                        i, feature, x[feature], threshold))
-                    logger.debug("Let x_{} = ({} - epsilon) = ({} - {}) = {}".format(
+                logger.debug("Condition n. {} is: feature x_{} {} {}".format(
+                    i, feature, direction, threshold))
+                logger.debug("Let x_{} = ({} - epsilon) = ({} - {}) = {}".format(
                         feature, threshold, threshold, epsilon, (threshold - epsilon)))
-                    x_prime[feature] = threshold - epsilon
+                    x_synt[feature] = threshold - epsilon
 
             # Positive Direction Case: (x_i, theta_i, >) ==> x_i must be greater than
             # theta_i (x_i > theta_i)
             else:
-                logger.debug("Direction is \"{}\"".format(direction))
-                logger.debug("Condition n. {} is about feature x_{} = {}: ({} {} {})?".format(
-                    i, feature, x[feature], x[feature], direction, threshold))
-                if x[feature] > threshold:
-                    logger.debug("Condition n. {} is already verified by x as x_{} = {} {} {}".format(
-                        i, feature, x[feature], direction, threshold))
-                else:
-                    logger.debug("Condition n. {} is broken by x as x_{} = {} <= {}".format(
-                        i, feature, x[feature], threshold))
-                    logger.debug("Let x_{} = ({} + epsilon) = ({} + {}) = {}".format(
+                logger.debug("Condition n. {} is: feature x_{} {} {}".format(
+                    i, feature, direction, threshold))
+                logger.debug("Let x_{} = ({} + epsilon) = ({} + {}) = {}".format(
                         feature, threshold, threshold, epsilon, (threshold + epsilon)))
-                    x_prime[feature] = threshold + epsilon
+                    x_synt[feature] = threshold + epsilon
 
             logger.debug("Eventually, let's store feature x_{} = {} just computed according to path condition n. {}".format(
-                feature, x_prime[feature], i))
-            cache[cond] = x_prime[feature]
+                feature, x_synt[feature], i))
+            cache[cond] = x_synt[feature]
 
         i += 1
 
-    return x_prime
+    return x_synt
 
 ##########################################################################
 
 
-def compute_epsilon_transformations(x, i, model, k, paths, epsilon):
+# def compute_epsilon_transformations(x, i, model, k, paths, epsilon):
+
+#     logger = logging.getLogger(__name__)
+
+#     candidate_transformations = []
+#     cache = {}
+#     # Loop through all the trees of the ensemble
+#     for tree_id, tree in enumerate(model.estimators_):
+#         logger.info("Examining tree ID #{}".format(tree_id))
+#         logger.info(
+#             "Retrieve all the {}-leaved paths from tree ID #{}".format(k, tree_id))
+#         k_leaved_paths = paths[tree_id]
+#         # Loop through all the k-leaved paths of this tree
+#         for path_id, path in enumerate(k_leaved_paths):
+#             logger.debug(
+#                 "Compute the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{}".format(k, i, path_id, tree_id))
+#             x_prime = compute_epsilon_transformation(
+#                 x, path, epsilon, cache)
+#             logger.debug(
+#                 "Check if the {}-labelled epsilon-transformation of instance ID #{} just computed is also a candidate transformation".format(k, i))
+#             if model.predict(x_prime.reshape(1, -1))[0] == k:
+#                 logger.info(
+#                     "Add the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{} to the list of candidates".format(k, i, path_id, tree_id))
+#                 candidate_transformations.append(x_prime)
+
+#     return candidate_transformations
+
+##########################################################################
+
+def compute_k_labelled_instances(model, paths, k, epsilon, size, dtype=int):
 
     logger = logging.getLogger(__name__)
 
@@ -322,15 +332,12 @@ def compute_epsilon_transformations(x, i, model, k, paths, epsilon):
         # Loop through all the k-leaved paths of this tree
         for path_id, path in enumerate(k_leaved_paths):
             logger.debug(
-                "Compute the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{}".format(k, i, path_id, tree_id))
-            x_prime = compute_epsilon_transformation(
-                x, path, epsilon, cache)
-            logger.debug(
-                "Check if the {}-labelled epsilon-transformation of instance ID #{} just computed is also a candidate transformation".format(k, i))
-            if model.predict(x_prime.reshape(1, -1))[0] == k:
+                "Compute the {}-labelled epsilon-transformation (i.e., synthetic instance) from path ID #{} of tree ID #{}".format(k, path_id, tree_id))
+            x_synt = compute_k_labelled_instance(path, epsilon, size, cache)
+            if model.predict(x_synt.reshape(1, -1))[0] == k:
                 logger.info(
                     "Add the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{} to the list of candidates".format(k, i, path_id, tree_id))
-                candidate_transformations.append(x_prime)
+                candidate_transformations.append(x_synt)
 
     return candidate_transformations
 
@@ -343,12 +350,12 @@ def map_compute_epsilon_transformations(instance):
 
     logger = logging.getLogger(__name__)
 
-    x, i, model, label, paths, epsilon = instance
+    model, label, paths, epsilon = instance
 
     logger.info(
-        "Computing all the possible {}-labelled epsilon-transformations for instance x ID #{}".format(label, i))
+        "Computing all the possible {}-labelled epsilon-transformations".format(label))
 
-    return ((label, i), compute_epsilon_transformations(x, i, model, label, paths, epsilon))
+    return ((label), compute_k_labelled_instances(model, label, paths, epsilon))
 
 ##########################################################################
 
@@ -409,6 +416,12 @@ def main(options):
             k_labelled_transformations.setdefault(k, []).append(v)
 
     print(k_labelled_transformations)
+
+    # x = np.array([5, -4, 0, 2, 1]) # instance
+    # path = np.array([4,0,0,0,2]) # path
+    # mask = p == 0
+    # x_synt = path # resulting synthetic instance, initialized to path
+    # x_synt[mask] = path[mask] + x[mask] # element-wise sum of path and x conditioned on the fact that path's component is equal to 0
 
     # # Compute all the candidate epsilon-transformations of all the instances from their original label to any other target label
     # logger.info(
