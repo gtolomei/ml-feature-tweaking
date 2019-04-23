@@ -13,6 +13,7 @@ import argparse
 import logging
 import pickle
 import ast
+import timeit
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
@@ -66,8 +67,8 @@ def get_options(cmd_args=None):
         help="""Path to the input file containing all the paths represented by the model.""",
         type=str)
     cmd_parser.add_argument(
-        'output_dirname',
-        help="""Path to the output directory containing results.""",
+        'output_fileame',
+        help="""Path to the output file containing all the k-labelled transformations.""",
         type=str)
     cmd_parser.add_argument(
         '-e',
@@ -81,7 +82,7 @@ def get_options(cmd_args=None):
     options['dataset_filename'] = args.dataset_filename
     options['model_filename'] = args.model_filename
     options['paths_filename'] = args.paths_filename
-    options['output_dirname'] = args.output_dirname
+    options['output_filename'] = args.output_filename
     options['epsilon'] = args.epsilon
 
     return options
@@ -213,7 +214,7 @@ def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
 
     Args:
         path (list(tuple)): encoding of a root-to-leaf path of a decision tree as
-                            [(0, <dir>, theta_0), ..., (n-1, <dir>, theta_{n-1})] 
+                            [(0, <dir>, theta_0), ..., (n-1, <dir>, theta_{n-1})]
                             where each (i, <dir>, theta_i) encodes a boolean condition as follows
                             - if <dir> = "<=" then (i, "<=", theta_i) means that the (i+1)-th feature must be less than or equal to theta_i
                             (x_{i+1} <= theta_i)
@@ -226,7 +227,7 @@ def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
         dtype (numpy.dtype): dtype associated with the elements of the returned instance
 
     Returns:
-        x_synt (numpy.ndarray): a synthetic instance, such that it satisfies 
+        x_synt (numpy.ndarray): a synthetic instance, such that it satisfies
                                 the conditions encoded in path with an epsilon tolerance
                                 For example, if path = [(0, >, 1.5), (2, <=, -4)] and size = 5
                                 x_synt = (1.5+epsilon, 0, -4-epsilon, 0, 0)
@@ -265,8 +266,8 @@ def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
                 logger.debug("Condition n. {} is: feature x_{} {} {}".format(
                     i, feature, direction, threshold))
                 logger.debug("Let x_{} = ({} - epsilon) = ({} - {}) = {}".format(
-                        feature, threshold, threshold, epsilon, (threshold - epsilon)))
-                    x_synt[feature] = threshold - epsilon
+                    feature, threshold, threshold, epsilon, (threshold - epsilon)))
+                x_synt[feature] = threshold - epsilon
 
             # Positive Direction Case: (x_i, theta_i, >) ==> x_i must be greater than
             # theta_i (x_i > theta_i)
@@ -274,8 +275,8 @@ def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
                 logger.debug("Condition n. {} is: feature x_{} {} {}".format(
                     i, feature, direction, threshold))
                 logger.debug("Let x_{} = ({} + epsilon) = ({} + {}) = {}".format(
-                        feature, threshold, threshold, epsilon, (threshold + epsilon)))
-                    x_synt[feature] = threshold + epsilon
+                    feature, threshold, threshold, epsilon, (threshold + epsilon)))
+                x_synt[feature] = threshold + epsilon
 
             logger.debug("Eventually, let's store feature x_{} = {} just computed according to path condition n. {}".format(
                 feature, x_synt[feature], i))
@@ -285,77 +286,75 @@ def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
 
     return x_synt
 
-##########################################################################
-
-
-# def compute_epsilon_transformations(x, i, model, k, paths, epsilon):
-
-#     logger = logging.getLogger(__name__)
-
-#     candidate_transformations = []
-#     cache = {}
-#     # Loop through all the trees of the ensemble
-#     for tree_id, tree in enumerate(model.estimators_):
-#         logger.info("Examining tree ID #{}".format(tree_id))
-#         logger.info(
-#             "Retrieve all the {}-leaved paths from tree ID #{}".format(k, tree_id))
-#         k_leaved_paths = paths[tree_id]
-#         # Loop through all the k-leaved paths of this tree
-#         for path_id, path in enumerate(k_leaved_paths):
-#             logger.debug(
-#                 "Compute the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{}".format(k, i, path_id, tree_id))
-#             x_prime = compute_epsilon_transformation(
-#                 x, path, epsilon, cache)
-#             logger.debug(
-#                 "Check if the {}-labelled epsilon-transformation of instance ID #{} just computed is also a candidate transformation".format(k, i))
-#             if model.predict(x_prime.reshape(1, -1))[0] == k:
-#                 logger.info(
-#                     "Add the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{} to the list of candidates".format(k, i, path_id, tree_id))
-#                 candidate_transformations.append(x_prime)
-
-#     return candidate_transformations
 
 ##########################################################################
 
-def compute_k_labelled_instances(model, paths, k, epsilon, size, dtype=int):
+
+def create_synthetic_instance(x, path):
+    x_synt = path.copy()
+    # mask = path == 0
+    # x_synt[mask] = path[mask] + x[mask]
+
+    return x_synt
+
+##########################################################################
+
+
+def compute_k_labelled_instances(X, model, paths, k, epsilon, size, dtype=int):
 
     logger = logging.getLogger(__name__)
 
-    candidate_transformations = []
+    X_candidates = []  # np.array([], dtype=dtype).reshape((0, size))
+
     cache = {}
     # Loop through all the trees of the ensemble
-    for tree_id, tree in enumerate(model.estimators_):
+    for tree_id, tree in enumerate(model.estimators_[:5]):
         logger.info("Examining tree ID #{}".format(tree_id))
         logger.info(
             "Retrieve all the {}-leaved paths from tree ID #{}".format(k, tree_id))
         k_leaved_paths = paths[tree_id]
+
         # Loop through all the k-leaved paths of this tree
         for path_id, path in enumerate(k_leaved_paths):
             logger.debug(
-                "Compute the {}-labelled epsilon-transformation (i.e., synthetic instance) from path ID #{} of tree ID #{}".format(k, path_id, tree_id))
-            x_synt = compute_k_labelled_instance(path, epsilon, size, cache)
-            if model.predict(x_synt.reshape(1, -1))[0] == k:
-                logger.info(
-                    "Add the {}-labelled epsilon-transformation of instance ID #{} from path ID #{} of tree ID #{} to the list of candidates".format(k, i, path_id, tree_id))
-                candidate_transformations.append(x_synt)
+                "Compute the {}-labelled epsilon-bound transformation (i.e., synthetic instance) from path ID #{} of tree ID #{}".format(k, path_id, tree_id))
+            x_path = compute_k_labelled_instance(
+                path, epsilon, size, dtype, cache)
+            # Smartly combine the computed synthetic instance derived from this k-leaved path with all the non-k-labelled instances
+            logger.debug(
+                "Create the corresponding synthetic instances combining all the {} non-{}-labelled instances".format(X.shape[0], k))
+            X_synt = np.apply_along_axis(
+                create_synthetic_instance, 1, X, x_path)
+            # Restrict synthetic instances to those actually leading to a k-labelled prediction
+            # using boolean mask indexing which synthetic instance has actually switched prediction (i.e., from non-k to k)
+            logger.debug(
+                "Restrict to only those synthetic instances which actually switch their prediction to {}".format(k))
+            X_synt_candidates = X_synt[model.predict(X_synt) == k]
+            # Concatenate the computed synthetic candidate instances to the list of all candidates
+            logger.debug(
+                "Add these synthetic instances to the final list of candidates")
+            X_candidates.extend(X_synt_candidates)
+            # X_candidates = np.concatenate(
+            #     (X_candidates, X_synt_candidates), axis=0)
 
-    return candidate_transformations
+    logger.info("Eventually, return all the candidate {}-bound {}-labelled transformations [n. of candidates = {}]".format(
+        epsilon, k, len(X_candidates)))
+
+    return X_candidates
 
 ##########################################################################
-
-# Map function to compute epsilon-transformations of an instance to a target class label k
 
 
 def map_compute_epsilon_transformations(instance):
 
     logger = logging.getLogger(__name__)
 
-    model, label, paths, epsilon = instance
+    X, model, paths, label, epsilon, size, dtype = instance
 
     logger.info(
         "Computing all the possible {}-labelled epsilon-transformations".format(label))
 
-    return ((label), compute_k_labelled_instances(model, label, paths, epsilon))
+    return ((label), compute_k_labelled_instances(X, model, paths, label, epsilon, size, dtype=dtype))
 
 ##########################################################################
 
@@ -370,7 +369,16 @@ def extract_correctly_predicted_instances(dataset, model):
 ##########################################################################
 
 
+def save_transformations(transformations, output_filename):
+    with open(output_filename, "wb") as output_file:
+        pickle.dump(transformations, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+##########################################################################
+
+
 def main(options):
+
     logger = configure_logging(level=logging.INFO)
 
     # Loading dataset
@@ -395,39 +403,57 @@ def main(options):
     logger.info("==> Extracting from the original dataset those instances which the model is able to correctly predict the true class of")
     dataset = extract_correctly_predicted_instances(dataset, model)
 
+    # Setting up multiple processes (i.e., workers)
     logger.info("==> Creating the pool of {} workers".format(mp.cpu_count()))
     pool = mp.Pool(mp.cpu_count())
     logger.info("==> Preparing the input to be sent to each worker of the pool")
 
+    # Compute all the candidate epsilon-transformations of all the instances from their original label to any other target label
+    logger.info(
+        "==> Compute all the candidate {}-transformations of all the instances from their original label to any other target label".format(options['epsilon']))
+
     dataset = dataset.iloc[:1, :]
 
+    # dictionary of all k-labelled transformations {'label': [trans_1, trans_2, ..., trans_n]}
+    # where each `trans_i` is a one-dimensional numpy array
     k_labelled_transformations = {}
-
-    for label in [7]:  # model.classes_:
+    # list of inputs sent to each worker [(input_w1), ..., (input_wm)]
+    inputs = []
+    # loop through every label
+    for label in model.classes_:
         logger.info(
             "Transform all non-{}-labelled instances into {}-labelled ones".format(label, label))
-        X = dataset[~(dataset["label"] == label)].iloc[:, 1:]
-        logger.info(
-            "Number of instances to be transformed: {}".format(X.shape[0]))
-        inputs = [(X.loc[i, :].values, i, model, label,
-                   paths[label], options['epsilon']) for i in X.index]
-        result = pool.map(map_compute_epsilon_transformations, inputs)
-        for k, v in result:
-            k_labelled_transformations.setdefault(k, []).append(v)
+        # select only the subset of instances having a different label from the one currently under investigation
+        X = dataset[~(dataset["label"] == label)].iloc[:, 1:].values
+        # check if there exists at least one instance having such a property
+        if X.shape[0] > 0:
+            logger.info(
+                "Number of instances to be transformed to label k = {}: {}".format(label, X.shape[0]))
+            # if so, just append the portion of the dataset (plus extra arguments) to the list of inputs
+            inputs.append((X, model, paths[label], label,
+                           options['epsilon'], X.shape[1], X.dtype))
+        else:
+            logger.info(
+                "All the instances have already label k = {}".format(label))
 
-    print(k_labelled_transformations)
+    # the output of all the workers will be a tuple of tuples ('label', [trans_1, trans_2, ..., trans_n])
+    # by applying a `dict` operator this will be transformed into a dictionary as expected
+    k_labelled_transformations = dict(
+        pool.map(map_compute_epsilon_transformations, inputs))
 
-    # x = np.array([5, -4, 0, 2, 1]) # instance
-    # path = np.array([4,0,0,0,2]) # path
-    # mask = p == 0
-    # x_synt = path # resulting synthetic instance, initialized to path
-    # x_synt[mask] = path[mask] + x[mask] # element-wise sum of path and x conditioned on the fact that path's component is equal to 0
+    # Finally, persist the just computed k-labelled transformations to disk
+    logger.info("Finally, serialize transformations to {}".format(options['output_filename']))
+    save_transformations(k_labelled_transformations, options['output_filename'])
 
-    # # Compute all the candidate epsilon-transformations of all the instances from their original label to any other target label
-    # logger.info(
-    #     "==> Compute all the candidate {}-transformations of all the instances from their original label to any other target label".format(options['epsilon']))
-    # candidate_transformations = compute_candidate_transformations(
-    #     dataset.head(100), model, paths, epsilon=options['epsilon'])
+    # for k in k_labelled_transformations:
+    #     X_trans = k_labelled_transformations[k]
+    #     logger.info("Class label: {}".format(k))
+    #     if len(X_trans) > 0:
+    #         logger.info("Do all transformations lead to a {}-labelled instance? {}".format(
+    #             k, np.all(model.predict(X_trans) == k)))
+    #     else:
+    #         logger.info(
+    #             "No transformations available for class label {}".format(k))
 
 
 if __name__ == '__main__':
