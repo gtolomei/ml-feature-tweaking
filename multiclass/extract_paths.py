@@ -11,7 +11,7 @@ import sys
 import os
 import argparse
 import logging
-import pickle
+import gzip
 import numpy as np
 
 from sklearn.externals import joblib
@@ -283,8 +283,8 @@ def enumerate_paths(model, tmp_filename='./model_paths.tmp'):
 
 
 def dump_paths(paths, output_filename):
-    with open(output_filename, "wb") as output_file:
-        pickle.dump(paths, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    with gzip.GzipFile(output_filename + '.gz', 'wb') as output_file:
+        joblib.dump(paths, output_file)
 
 
 def main(options):
@@ -322,8 +322,8 @@ def main(options):
             options['model_filename'] + '.paths.tmp'))
         os.remove(options['model_filename'] + '.paths.tmp')
 
-        # Save all the k-leaved paths to disk
-    logger.info("==> Saving all the extracted paths to `{}`".format(
+    # Save all the k-leaved paths to disk
+    logger.info("==> Saving all the extracted paths to `{}.gz`".format(
         options['output_filename']))
     dump_paths(paths, options['output_filename'])
 

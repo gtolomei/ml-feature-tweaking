@@ -8,12 +8,9 @@ Created by Gabriele Tolomei on 2019-04-10.
 """
 
 import sys
-import os
 import argparse
 import logging
-import pickle
-import ast
-import timeit
+import gzip
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
@@ -67,7 +64,7 @@ def get_options(cmd_args=None):
         help="""Path to the input file containing all the paths represented by the model.""",
         type=str)
     cmd_parser.add_argument(
-        'output_fileame',
+        'output_filename',
         help="""Path to the output file containing all the k-labelled transformations.""",
         type=str)
     cmd_parser.add_argument(
@@ -109,7 +106,7 @@ def check_valid_epsilon(value):
 ######################## Loading Dataset as a Pandas DataFrame object ####
 
 
-def loading_dataset(input_filename, sep="\t", fillna=None):
+def load_dataset(input_filename, sep="\t", fillna=None):
     """
     This function is responsible for loading the input dataset.
     The internal representation of the dataset is a pandas.DataFrame object
@@ -143,10 +140,8 @@ def loading_dataset(input_filename, sep="\t", fillna=None):
 
 ##########################################################################
 
-##########################################################################
 
-
-def loading_model(model_filename):
+def load_model(model_filename):
     """
     This function loads a model from a dump done via scikit-learn
 
@@ -160,51 +155,32 @@ def loading_model(model_filename):
 
 ##########################################################################
 
-##########################################################################
 
-
-def loading_paths(paths_filename):
+def load_paths(paths_filename):
     """
-    This function return the internal representation of (positive) paths as extracted from
-    the model
+    This function return the internal representation of paths as extracted from
+    the learned model
 
     Args:
         paths_filename (str): path to the filename containing the persisted positive paths
 
     Return:
-        paths (dict): a dictionary containing a key for each decision tree of the ensemble
-                        and for each key a list of tuple (x_i, theta_i) encoding the boolean condition
-                        as follows:
-                        if theta_i < 0 then the encoded condition will be feature x_i <= theta_i
-                        if theta_i > 0 then the encoded condition will be feature x_i > theta_i
+        paths (dict):   a dictionary of dictionaries.
+                        The outermost dictionary contains a key for each class label.
+                        Each innermost dictionary contains a key for each decision tree of the ensemble.
+                        Each entry is in turn made of a list of list of tuples, where each tuple is in the form of (x_i, dir, theta_i)
+                        encoding the boolean condition as follows:
+                            x_i <= theta_i, if dir = "<="
+                            x_i > theta_i, if dir = ">"
+                        e.g., paths[k][tree_id] = [[(14, <=, -0.7171), (7, >, 457.0), (12, <=, 54.609), (39, >, -0.059)], ...]
     """
 
     with open(paths_filename, "rb") as paths_file:
-        paths = pickle.load(paths_file)
+        paths = joblib.load(paths_file)
 
-    # paths = {}
-    # with open(paths_filename) as paths_file:
-    #     for record in paths_file:
-    #         record = record.strip()
-    #         record = record[1:-2]
-    #         # add an extra comma at the end to be able to deal with a
-    #         # single-condition path
-    #         record = record + ','
-    #         fields = record.split(", [")
-    #         tree_id = int(fields[0])
-    #         path = list(ast.literal_eval(fields[1]))
-    #         if tree_id in paths:
-    #             paths[tree_id].append(path)
-    #         else:
-    #             paths[tree_id] = [path]
     return paths
 
 ##########################################################################
-
-##########################################################################
-
-# Compute epsilon-transformation of an instance according to a specific
-# path ##
 
 
 def compute_k_labelled_instance(path, epsilon, size, dtype, cache):
@@ -359,10 +335,10 @@ def map_compute_epsilon_transformations(instance):
 ##########################################################################
 
 
-def extract_correctly_predicted_instances(dataset, model):
+def extract_correctly_predicted_instances(dataset, model, label="label"):
 
     X = dataset.iloc[:, 1:].values
-    y = dataset["label"].values
+    y = dataset[label].values
 
     return dataset[(model.predict(X) == y)]
 
@@ -370,8 +346,8 @@ def extract_correctly_predicted_instances(dataset, model):
 
 
 def save_transformations(transformations, output_filename):
-    with open(output_filename, "wb") as output_file:
-        pickle.dump(transformations, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    with gzip.GzipFile(output_filename + '.gz', 'wb') as output_file:
+        joblib.dump(transformations, output_file)
 
 
 ##########################################################################
@@ -384,7 +360,7 @@ def main(options):
     # Loading dataset
     logger.info("==> Loading dataset from `{}`".format(
         options['dataset_filename']))
-    dataset = loading_dataset(options['dataset_filename'], sep=",")
+    dataset = load_dataset(options['dataset_filename'], sep=",")
 
     logger.info("Shape of the dataset: {} instances by {} features".format(
         dataset.shape[0], dataset.shape[1] - 1))
@@ -392,12 +368,12 @@ def main(options):
     # Loading model
     logger.info("==> Loading model from `{}`".format(
         options['model_filename']))
-    model = loading_model(options['model_filename'])
+    model = load_model(options['model_filename'])
 
     # Loading all the paths encoded by the model
     logger.info("==> Loading paths from `{}`".format(
         options['paths_filename']))
-    paths = loading_paths(options['paths_filename'])
+    paths = load_paths(options['paths_filename'])
 
     # Working only on those instances which the model is able to correctly predict the true class of
     logger.info("==> Extracting from the original dataset those instances which the model is able to correctly predict the true class of")
@@ -442,8 +418,10 @@ def main(options):
         pool.map(map_compute_epsilon_transformations, inputs))
 
     # Finally, persist the just computed k-labelled transformations to disk
-    logger.info("Finally, serialize transformations to {}".format(options['output_filename']))
-    save_transformations(k_labelled_transformations, options['output_filename'])
+    logger.info("Finally, serialize transformations to `{}.gz`".format(
+        options['output_filename']))
+    save_transformations(k_labelled_transformations,
+                         options['output_filename'])
 
     # for k in k_labelled_transformations:
     #     X_trans = k_labelled_transformations[k]
