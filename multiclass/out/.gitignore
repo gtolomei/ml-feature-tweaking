@@ -1,0 +1,6 @@
+# Ignore the following files in this directory
+.DS_Store
+__pycache__
+*.gz
+# Except this file
+!.gitignore

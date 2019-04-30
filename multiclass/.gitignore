@@ -3,7 +3,5 @@
 __pycache__
 .ipynb_checkpoints
 *.log
-*.log.*
-*.gz
 # Except this file
 !.gitignore
