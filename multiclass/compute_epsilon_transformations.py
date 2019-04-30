@@ -284,7 +284,7 @@ def compute_k_labelled_instances(X, model, paths, k, epsilon, size, dtype=int):
 
     cache = {}
     # Loop through all the trees of the ensemble
-    for tree_id, tree in enumerate(model.estimators_[:5]):
+    for tree_id, tree in enumerate(model.estimators_[:10]):
         logger.info("Examining tree ID #{}".format(tree_id))
         logger.info(
             "Retrieve all the {}-leaved paths from tree ID #{}".format(k, tree_id))
@@ -388,7 +388,7 @@ def main(options):
     logger.info(
         "==> Compute all the candidate {}-transformations of all the instances from their original label to any other target label".format(options['epsilon']))
 
-    dataset = dataset.iloc[:1, :]
+    dataset = dataset.iloc[:5, :]
 
     # dictionary of all k-labelled transformations {'label': [trans_1, trans_2, ..., trans_n]}
     # where each `trans_i` is a one-dimensional numpy array
@@ -422,16 +422,6 @@ def main(options):
         options['output_filename']))
     save_transformations(k_labelled_transformations,
                          options['output_filename'])
-
-    # for k in k_labelled_transformations:
-    #     X_trans = k_labelled_transformations[k]
-    #     logger.info("Class label: {}".format(k))
-    #     if len(X_trans) > 0:
-    #         logger.info("Do all transformations lead to a {}-labelled instance? {}".format(
-    #             k, np.all(model.predict(X_trans) == k)))
-    #     else:
-    #         logger.info(
-    #             "No transformations available for class label {}".format(k))
 
 
 if __name__ == '__main__':
