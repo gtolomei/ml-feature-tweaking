@@ -35,7 +35,7 @@ class decision_tree_structure:
         try:
             (left, right) = line.split(' [label="')
         except ValueError:
-            print ('Error splitting', line)
+            print('Error splitting', line)
             sys.exit(-1)
         if right[0] == 'X':
             feature_id = ''

@@ -151,7 +151,8 @@ def load_model(model_filename):
     Return:
         an instance representing the trained model
     """
-    return joblib.load(model_filename)
+    with open(model_filename, 'rb') as model_file:
+        return joblib.load(model_file)
 
 ##########################################################################
 
@@ -284,7 +285,7 @@ def compute_k_labelled_instances(X, model, paths, k, epsilon, size, dtype=int):
 
     cache = {}
     # Loop through all the trees of the ensemble
-    for tree_id, tree in enumerate(model.estimators_[:10]):
+    for tree_id, tree in enumerate(model.estimators_):
         logger.info("Examining tree ID #{}".format(tree_id))
         logger.info(
             "Retrieve all the {}-leaved paths from tree ID #{}".format(k, tree_id))
@@ -297,19 +298,21 @@ def compute_k_labelled_instances(X, model, paths, k, epsilon, size, dtype=int):
             x_path = compute_k_labelled_instance(
                 path, epsilon, size, dtype, cache)
             # Smartly combine the computed synthetic instance derived from this k-leaved path with all the non-k-labelled instances
-            logger.debug(
-                "Create the corresponding synthetic instances combining all the {} non-{}-labelled instances".format(X.shape[0], k))
-            X_synt = np.apply_along_axis(
-                create_synthetic_instance, 1, X, x_path)
+            # logger.debug(
+            #     "Create the corresponding synthetic instances combining all the {} non-{}-labelled instances".format(X.shape[0], k))
+            # X_synt = np.apply_along_axis(
+            #     create_synthetic_instance, 1, X, x_path)
             # Restrict synthetic instances to those actually leading to a k-labelled prediction
             # using boolean mask indexing which synthetic instance has actually switched prediction (i.e., from non-k to k)
-            logger.debug(
-                "Restrict to only those synthetic instances which actually switch their prediction to {}".format(k))
-            X_synt_candidates = X_synt[model.predict(X_synt) == k]
+            # logger.debug(
+            #     "Restrict to only those synthetic instances which actually switch their prediction to {}".format(k))
+            # X_synt_candidates = X_synt[model.predict(X_synt) == k]
             # Concatenate the computed synthetic candidate instances to the list of all candidates
-            logger.debug(
-                "Add these synthetic instances to the final list of candidates")
-            X_candidates.extend(X_synt_candidates)
+            # logger.debug(
+            #     "Add these synthetic instances to the final list of candidates")
+            # X_candidates.extend(X_synt_candidates)
+            if model.predict(x_path.reshape(1, -1) == k):
+                X_candidates.append(x_path)
             # X_candidates = np.concatenate(
             #     (X_candidates, X_synt_candidates), axis=0)
 
@@ -388,7 +391,7 @@ def main(options):
     logger.info(
         "==> Compute all the candidate {}-transformations of all the instances from their original label to any other target label".format(options['epsilon']))
 
-    dataset = dataset.iloc[:5, :]
+    dataset = dataset.iloc[:50, :]
 
     # dictionary of all k-labelled transformations {'label': [trans_1, trans_2, ..., trans_n]}
     # where each `trans_i` is a one-dimensional numpy array

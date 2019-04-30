@@ -10,13 +10,12 @@ Created by Gabriele Tolomei on 2019-04-24.
 import sys
 import argparse
 import logging
+import time
 import gzip
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 
 from sklearn.externals import joblib
-from sklearn.neighbors import KDTree, BallTree
 
 
 def configure_logging(level=logging.INFO):
@@ -151,7 +150,8 @@ def load_model(model_filename):
     Return:
         an instance representing the trained model
     """
-    return joblib.load(model_filename)
+    with open(model_filename, 'rb') as model_file:
+        return joblib.load(model_file)
 
 ##########################################################################
 
@@ -219,13 +219,14 @@ def get_knn_opt(X, true_labels, target_labels, ids, k, spatial_index):
         x_id = ids[i]
         knn[(x_id, y)] = {}
         for label in target_labels[i]:
-            logger.info(
-                "Retrieve the spatial index trained on the {}-labelled transformations computed previously ...".format(label))
-            tree = spatial_index[label]
-            logger.info(
-                "Retrieve the {}-nearest {}-labelled neighbours to this instance id #{} originally labelled as {}".format(k, label, x_id, y))
-            nearest_dist, nearest_ind = tree.query(x, k=k)
-            knn[(x_id, y)][label] = list(zip(nearest_dist, nearest_ind))
+            if label in spatial_index:
+                logger.info(
+                    "Retrieve the spatial index trained on the {}-labelled transformations computed previously ...".format(label))
+                tree = spatial_index[label]
+                logger.info(
+                    "Retrieve the {}-nearest {}-labelled neighbours to this instance id #{} originally labelled as `{}`".format(k, label, x_id, y))
+                nearest_dist, nearest_ind = tree.query(x.reshape(1, -1), k=k)
+                knn[(x_id, y)][label] = list(zip(nearest_dist.flatten().tolist(), nearest_ind.flatten().tolist()))
 
     return knn
 
@@ -292,10 +293,11 @@ def main(options):
     if options['index_filename']:
         spatial_index = load_spatial_index(options['index_filename'])
 
+    start_time = time.time()
     knn = get_knn(X_query, y_query, target_labels, sample_ids,
                   transformations, k=options['knn'], spatial_index=spatial_index)
-
-    print(knn)
+    end_time = int(time.time() - start_time)
+    logger.info("Total elapsed time for computing k-NN [k={}]: {:02d}:{:02d}:{:02d}".format(options['knn'], end_time // 3600, (end_time % 3600 // 60), end_time % 60))
 
 
 if __name__ == '__main__':
