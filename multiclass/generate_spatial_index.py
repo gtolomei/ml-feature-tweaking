@@ -119,8 +119,6 @@ def main(options):
             k, len(transformations[k])))
     logger.info("******************************************")
 
-    sys.exit(-1)
-
     logger.info("==> Generating `{}` spatial index".format(options['type']))
 
     index_type = None
@@ -161,8 +159,8 @@ def main(options):
 
     # Save all the spatial indices
     logger.info("==> Saving all the {} spatial index to `{}.gz`".format(
-        options['type'], options['output_filename']))
-    save_spatial_indices(index, options['output_filename'])
+        options['type'], options['output_filename'] + '-eps_{}.idx'.format(epsilon)))
+    save_spatial_indices(index, options['output_filename'] + '-eps_{}.idx'.format(epsilon))
 
 
 if __name__ == '__main__':
