@@ -200,7 +200,8 @@ def get_knn_brute_force(X, true_labels, target_labels, ids, transformations, k):
                 distances = sorted(distances, key=lambda tup: tup[0])
                 knn[(x_id, y)][label] = distances[:k]
             else:
-                logger.info("No {}-labelled candidates available!".format(label))
+                logger.info(
+                    "No {}-labelled candidates available!".format(label))
 
     return knn
 
@@ -226,7 +227,8 @@ def get_knn_opt(X, true_labels, target_labels, ids, k, spatial_index):
                 logger.info(
                     "Retrieve the {}-nearest {}-labelled neighbours to this instance id #{} originally labelled as `{}`".format(k, label, x_id, y))
                 nearest_dist, nearest_ind = tree.query(x.reshape(1, -1), k=k)
-                knn[(x_id, y)][label] = list(zip(nearest_dist.flatten().tolist(), nearest_ind.flatten().tolist()))
+                knn[(x_id, y)][label] = list(
+                    zip(nearest_dist.flatten().tolist(), nearest_ind.flatten().tolist()))
 
     return knn
 
@@ -297,7 +299,8 @@ def main(options):
     knn = get_knn(X_query, y_query, target_labels, sample_ids,
                   transformations, k=options['knn'], spatial_index=spatial_index)
     end_time = int(time.time() - start_time)
-    logger.info("Total elapsed time for computing k-NN [k={}]: {:02d}:{:02d}:{:02d}".format(options['knn'], end_time // 3600, (end_time % 3600 // 60), end_time % 60))
+    logger.info("Total elapsed time for computing k-NN [k={}]: {:02d}:{:02d}:{:02d}".format(
+        options['knn'], end_time // 3600, (end_time % 3600 // 60), end_time % 60))
 
 
 if __name__ == '__main__':

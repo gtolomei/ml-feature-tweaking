@@ -100,7 +100,7 @@ def check_valid_epsilon(value):
     fvalue = float(value)
     if fvalue <= 0:
         raise argparse.ArgumentTypeError(
-            "{} is an invalid value for test_split_proportion which must be any x, such that x > 0".format(fvalue))
+            "{} is an invalid value for epsilon which must be any x, such that x > 0".format(fvalue))
     return fvalue
 
 ######################## Loading Dataset as a Pandas DataFrame object ####
@@ -401,8 +401,10 @@ def main(options):
     inputs = []
     # loop through every label
     for label in model.classes_:
-        logger.info("Generate k-labelled epsilon-transformations from extracted paths [k = {}; epsilon = {}]".format(label, options['epsilon']))
-        inputs.append((model, paths[label], label, options['epsilon'], X.shape[1], X.dtype))
+        logger.info(
+            "Generate k-labelled epsilon-transformations from extracted paths [k = {}; epsilon = {}]".format(label, options['epsilon']))
+        inputs.append((model, paths[label], label,
+                       options['epsilon'], X.shape[1], X.dtype))
         # logger.info(
         #     "Transform all non-{}-labelled instances into {}-labelled ones".format(label, label))
         # # select only the subset of instances having a different label from the one currently under investigation
@@ -424,10 +426,10 @@ def main(options):
         pool.map(map_compute_epsilon_transformations, inputs))
 
     # Finally, persist the just computed k-labelled transformations to disk
-    logger.info("Finally, serialize transformations to `{}-eps_{}.gz`".format(
+    logger.info("Finally, serialize transformations to `{}-eps_{:d}.gz`".format(
         options['output_filename'], options['epsilon']))
     save_transformations(k_labelled_transformations,
-                         options['output_filename'])
+                         "{}-eps_{:d}".format(options['output_filename'], options['epsilon']))
 
 
 if __name__ == '__main__':
