@@ -13,6 +13,7 @@ import logging
 import time
 import numpy as np
 import pandas as pd
+import distance_functions
 
 from sklearn.externals import joblib
 
@@ -82,10 +83,10 @@ def get_options(cmd_args=None):
     cmd_parser.add_argument(
         '-d',
         '--distance',
-        default='l2',
-        const='l2',
+        default='euclidean',
+        const='euclidean',
         nargs='?',
-        choices=['l1', 'l2', 'cosine'],
+        choices=['euclidean', 'cosine', 'jaccard', 'pearson'],
         help="""Distance metric used to compute k-NN (default: %(default)s)""")
     args = cmd_parser.parse_args(cmd_args)
 
@@ -169,14 +170,15 @@ def load_spatial_index(index_filename):
 
 ##########################################################################
 
-def compute_distance(x, c):
-    return np.linalg.norm(x - c)
 
-
-##########################################################################
-
-
-def get_knn_brute_force(X, true_labels, target_labels, ids, transformations, k):
+def get_knn_brute_force(
+        X,
+        true_labels,
+        target_labels,
+        ids,
+        transformations,
+        distance_function,
+        k):
 
     logger = logging.getLogger(__name__)
 
@@ -187,19 +189,24 @@ def get_knn_brute_force(X, true_labels, target_labels, ids, transformations, k):
         x_id = ids[i]
         knn[(x_id, y)] = {}
         for label in target_labels[i]:
-            logger.info(
+            logger.debug(
                 "Retrieve all the {}-labelled transformations computed previously ...".format(label))
             candidates = transformations[label]
             if candidates and len(candidates) > 0:
-                logger.info(
-                    "Compute all-pair distances from instance id #{} originally labelled as `{}` to the [{}] {}-labelled candidates...".format(x_id, y, len(candidates), label))
-                # compute all-pair distances from this query vector to all the candidates
-                distances = [(compute_distance(x, c), c_i) for c_i, c in enumerate(
-                    candidates)]
+                logger.debug(
+                    "Compute all-pair distances from instance id #{} originally labelled as `{}` to the [{}] {}-labelled candidates...".format(
+                        x_id,
+                        y,
+                        len(candidates),
+                        label))
+                # compute all-pair distances from this query vector to all the
+                # candidates
+                distances = [(distance_function(x, c), c_i)
+                             for c_i, c in enumerate(candidates)]
                 distances = sorted(distances, key=lambda tup: tup[0])
                 knn[(x_id, y)][label] = distances[:k]
             else:
-                logger.info(
+                logger.debug(
                     "No {}-labelled candidates available!".format(label))
 
     return knn
@@ -220,11 +227,15 @@ def get_knn_opt(X, true_labels, target_labels, ids, k, spatial_index):
         knn[(x_id, y)] = {}
         for label in target_labels[i]:
             if label in spatial_index:
-                logger.info(
+                logger.debug(
                     "Retrieve the spatial index trained on the {}-labelled transformations computed previously ...".format(label))
                 tree = spatial_index[label]
-                logger.info(
-                    "Retrieve the {}-nearest {}-labelled neighbours to this instance id #{} originally labelled as `{}`".format(k, label, x_id, y))
+                logger.debug(
+                    "Retrieve the {}-nearest {}-labelled neighbours to this instance id #{} originally labelled as `{}`".format(
+                        k,
+                        label,
+                        x_id,
+                        y))
                 nearest_dist, nearest_ind = tree.query(x.reshape(1, -1), k=k)
                 knn[(x_id, y)][label] = list(
                     zip(nearest_dist.flatten().tolist(), nearest_ind.flatten().tolist()))
@@ -234,16 +245,37 @@ def get_knn_opt(X, true_labels, target_labels, ids, k, spatial_index):
 ##########################################################################
 
 
-def get_knn(X, true_labels, target_labels, ids, transformations, k=1, spatial_index=None):
+def get_knn(
+        X,
+        true_labels,
+        target_labels,
+        ids,
+        transformations,
+        distance_function,
+        k=1,
+        spatial_index=None):
 
     logger = logging.getLogger(__name__)
 
     if spatial_index:
         logger.info("==> Extract k-NN using efficient spatial index ...")
-        return get_knn_opt(X, true_labels, target_labels, ids, k, spatial_index)
+        return get_knn_opt(
+            X,
+            true_labels,
+            target_labels,
+            ids,
+            k,
+            spatial_index)
     else:
         logger.info("==> Extract k-NN using brute force ...")
-        return get_knn_brute_force(X, true_labels, target_labels, ids, transformations, k)
+        return get_knn_brute_force(
+            X,
+            true_labels,
+            target_labels,
+            ids,
+            transformations,
+            distance_function,
+            k)
 
 
 ##########################################################################
@@ -251,6 +283,17 @@ def get_knn(X, true_labels, target_labels, ids, transformations, k=1, spatial_in
 
 def get_target_labels(y, labels):
     return np.array([c for c in labels if c != y])
+
+
+##########################################################################
+
+
+def save_results(results, output_filename):
+
+    header = "method,k_nn,n_samples,epsilon,elapsed_time (secs.)\n"
+    with open(output_filename, "w") as out:
+        out.write(header)
+        out.write("{},{},{},{},{}\n".format(results[0], results[1], results[2], results[3], results[4]))
 
 
 ##########################################################################
@@ -274,8 +317,9 @@ def main(options):
     true_labels = sorted(dataset["label"].unique())
 
     # Extract a random sample of n query points
-    logger.info("==> Extracting a random sample (without replacement) of n = {} query points out of the whole dataset".format(
-        options['n_samples']))
+    logger.info(
+        "==> Extracting a random sample (without replacement) of n = {} query points out of the whole dataset".format(
+            options['n_samples']))
     sample_ids = np.random.choice(
         dataset.shape[0], options['n_samples'], replace=False)
     sample_dataset = dataset.iloc[sample_ids, :]
@@ -290,16 +334,48 @@ def main(options):
         options['transformations_filename']))
     transformations = load_transformations(options['transformations_filename'])
 
+    epsilon = options['transformations_filename'].split('eps_')[
+        1].split('.')[0]
+
+    logger.info("==> Epsilon transformations: epsilon = {}".format(epsilon))
+    logger.info("==> Distance function: {}".format(options['distance']))
+
     spatial_index = None
+    method = "brute-force"
+
     if options['index_filename']:
         spatial_index = load_spatial_index(options['index_filename'])
+        method = "-".join(options['index_filename'].split('/')[-1].split('-')[:2])
 
     start_time = time.time()
-    knn = get_knn(X_query, y_query, target_labels, sample_ids,
-                  transformations, k=options['knn'], spatial_index=spatial_index)
-    end_time = int(time.time() - start_time)
-    logger.info("Total elapsed time for computing k-NN [k={}]: {:02d}:{:02d}:{:02d}".format(
-        options['knn'], end_time // 3600, (end_time % 3600 // 60), end_time % 60))
+    knn = get_knn(
+        X_query,
+        y_query,
+        target_labels,
+        sample_ids,
+        transformations,
+        getattr(
+            distance_functions,
+            options['distance'] +
+            '_distance'),
+        k=options['knn'],
+        spatial_index=spatial_index)
+    end_time = time.time()
+    elapsed_time = int(end_time - start_time)
+    logger.info(
+        "Total elapsed time for computing k-NN [k={}]: {:02d}:{:02d}:{:02d}".format(
+            options['knn'],
+            elapsed_time //
+            3600,
+            (elapsed_time %
+             3600 //
+             60),
+            elapsed_time %
+            60))
+
+    output_filename = "{}-{}-{}-nn_{}.csv".format(options['output_filename'], method, options['knn'], int(time.time()))
+    logger.info("Saving results to `{}`".format(output_filename))
+    save_results((method, options['knn'], options['n_samples'], epsilon, elapsed_time), output_filename)
 
 
 if __name__ == '__main__':

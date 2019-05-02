@@ -255,7 +255,8 @@ def enumerate_paths(model, tmp_filename='./model_paths.tmp'):
     logger = logging.getLogger(__name__)
 
     # dictionary used to store all the k-leavede paths extracted from the model
-    # e.g., paths[k][tree_id] = [[(14, <=, -0.7171), (7, >, 457.0), (12, <=, 54.609), (39, >, -0.059)], ...]
+    # e.g., paths[k][tree_id] = [[(14, <=, -0.7171), (7, >, 457.0), (12, <=,
+    # 54.609), (39, >, -0.059)], ...]
     paths = {}
     classes = model.classes_  # extract all the leaf values
 
@@ -273,7 +274,8 @@ def enumerate_paths(model, tmp_filename='./model_paths.tmp'):
                 logger.debug(
                     "Extracting all the {}-leaved paths of tree ID #{}".format(k, tree_id))
                 if k not in paths:  # check if the current class k has been already examined on a different tree
-                    # if this is the first time we inspect class k, initialize the corresponding entry with an empty dictionary
+                    # if this is the first time we inspect class k, initialize
+                    # the corresponding entry with an empty dictionary
                     paths[k] = {}
                 paths[k][tree_id] = dt_structure.get_k_leaved_paths(k)
         tree_id += 1

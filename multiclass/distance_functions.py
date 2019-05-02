@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-cost_functions.py
+distance_functions.py
 
-Created by Gabriele Tolomei on 2016-06-29.
-Copyright (c) 2016 Yahoo! Labs. All rights reserved.
+Created by Gabriele Tolomei on 2019-05-02.
 """
 
 import sys
 import logging
 import logging.handlers
-import math
 import numpy as np
 from scipy import spatial
 from scipy.stats import *
@@ -23,7 +21,7 @@ FILE_LOGGING_FORMAT = '%(asctime)-15s *** %(levelname)s [%(filename)s:%(lineno)s
 # get the root logger
 logger = logging.getLogger(__name__)
 # set the logging level (default: DEBUG)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 # create a stream handler associated with the console (stdout)
 console_handler = logging.StreamHandler(sys.stdout)
 # set the console handler logging format
@@ -36,13 +34,19 @@ console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 # create a rotating file handler associated with an external file
 file_handler = logging.handlers.RotatingFileHandler(
-    "cost_functions.log", mode='w', maxBytes=(1048576 * 5), backupCount=2, encoding=None, delay=0)
+    "./logs/distance_functions.log",
+    mode='w',
+    maxBytes=(
+        1048576 * 5),
+    backupCount=2,
+    encoding=None,
+    delay=0)
 # set the file handler logging format
 file_logging_format = logging.Formatter(FILE_LOGGING_FORMAT)
 # specify the logging format for this file handler
 file_handler.setFormatter(file_logging_format)
 # set the logging level for this file handler (default: DEBUG)
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(logging.INFO)
 # attach this file handler to the logger
 logger.addHandler(file_handler)
 
@@ -65,15 +69,16 @@ def __normalize_vector(v):
         v' (numpy.array): the normalized vector v' as a numpy.array
     """
 
-    logger.info("Transform the input vector into a numpy array if needed")
+    logger.debug("Transform the input vector into a numpy array if needed")
     v = np.asarray(v)
-    logger.info("Compute the L-2 norm (i.e. Frobenius norm) of the input vector")
+    logger.debug(
+        "Compute the L-2 norm (i.e. Frobenius norm) of the input vector")
     norm = np.linalg.norm(v)
     if norm == 1:
-        logger.info(
+        logger.debug(
             "The L-2 norm (i.e. Frobenius norm) of the input vector is already {:.1f}. Let's just return the input vector as it is!".format(norm))
         return v
-    logger.info(
+    logger.debug(
         "The L-2 norm (i.e. Frobenius norm) of the input vector is {:.3f}. Let's normalize the input vector before returning it!".format(norm))
     return v / norm
 
@@ -140,16 +145,16 @@ def unmatched_component_rate(u, v):
         float: the ratio of unmatched components between u and v, normalized by the length of the vectors
     """
 
-    logger.info(
+    logger.debug(
         "Compute the unmatched component rate (UCR) between the two input vectors u and v")
-    return round(__count_unmatches(u, v) / float(len(u)), 5)
+    return __count_unmatches(u, v) / float(len(u))
 
 ##########################################################################
 
 # Compute the Euclidean Distance between tw
 
 
-def euclidean_distance(u, v):
+def euclidean_distance(u, v, normalize=False):
     """
     This function returns the euclidean distance between two vectors u and v.
 
@@ -161,20 +166,20 @@ def euclidean_distance(u, v):
         float: the euclidean distance between u and v computed as the L-2 norm of the vector
                 resulting from the difference (u - v)
     """
-
-    logger.info("Normalize the two input vectors")
-    u = __normalize_vector(u)
-    v = __normalize_vector(v)
-    logger.info(
+    if normalize:
+        logger.debug("Normalize the two input vectors")
+        u = __normalize_vector(u)
+        v = __normalize_vector(v)
+    logger.debug(
         "Compute the Euclidean distance between the two input vectors u and v")
-    return round(np.linalg.norm(u - v), 5)
+    return np.linalg.norm(u - v)
 
 ##########################################################################
 
 # Compute the Cosine Distance between two v
 
 
-def cosine_distance(u, v):
+def cosine_distance(u, v, normalize=False):
     """
     This function returns the cosine distance between two vectors u and v.
     Invariant with respect to the magnitude of the vectors (i.e. scaling)
@@ -186,10 +191,14 @@ def cosine_distance(u, v):
     Returns:
         float: the cosine distance between u and v
     """
+    if normalize:
+        logger.debug("Normalize the two input vectors")
+        u = __normalize_vector(u)
+        v = __normalize_vector(v)
 
-    logger.info(
+    logger.debug(
         "Compute the Cosine distance between the two input vectors u and v")
-    return round(spatial.distance.cosine(u, v), 5)
+    return spatial.distance.cosine(u, v)
 
 ##########################################################################
 
@@ -199,7 +208,7 @@ def cosine_distance(u, v):
 def jaccard_distance(u, v):
     """
     This function returns the Jaccard distance between two vectors u and v.
-    The Jaccard index Js defines a similarity measure; our distance measure is obtained as Jd = 1 - Js 
+    The Jaccard index Js defines a similarity measure; our distance measure is obtained as Jd = 1 - Js
 
     Example:
     u = [1, 2, 3, 4, 5, 4, 2, 2, 7, 10]
@@ -225,27 +234,29 @@ def jaccard_distance(u, v):
         float: the Jaccard distance between u and v
     """
 
-    logger.info(
+    logger.debug(
         "Compute the Jaccard distance between the two input vectors u and v")
-    logger.info("Transform both vectors into sets of elements")
+    logger.debug("Transform both vectors into sets of elements")
     s_u = set(u)
-    logger.info("First input vector u has {} unique values".format(len(s_u)))
+    logger.debug("First input vector u has {} unique values".format(len(s_u)))
     s_v = set(v)
-    logger.info("Second input vector v has {} unique values".format(len(s_v)))
+    logger.debug("Second input vector v has {} unique values".format(len(s_v)))
     s_u_and_v = s_u.intersection(s_v)
-    logger.info("The intersection set of the two vectors has {} unique values".format(
-        len(s_u_and_v)))
+    logger.debug(
+        "The intersection set of the two vectors has {} unique values".format(
+            len(s_u_and_v)))
     s_u_or_v = s_u.union(s_v)
-    logger.info(
-        "The union set of the two vectors has {} unique values".format(len(s_u_or_v)))
+    logger.debug(
+        "The union set of the two vectors has {} unique values".format(
+            len(s_u_or_v)))
     Js = len(s_u_and_v) / float(len(s_u_or_v))
-    logger.info(
+    logger.debug(
         "Jaccard similarity index between u and v is Js = {:.5f}".format(Js))
     Jd = 1 - Js
-    logger.info(
+    logger.debug(
         "Finally, return the Jaccard distance index between u and v = (1 - Js) = (1 - {:.5f}) = {:.5f}".format(Js, Jd))
 
-    return round(Jd, 5)
+    return Jd
 
 ##########################################################################
 
@@ -254,9 +265,9 @@ def jaccard_distance(u, v):
 
 def pearson_correlation_distance(u, v):
     """
-    This function computes the distance between two input vectors u and v 
+    This function computes the distance between two input vectors u and v
     in terms of their Pearson's correlation coefficient.
-    This coefficient is invariant to the magnitude of the vectors (i.e. scaling) 
+    This coefficient is invariant to the magnitude of the vectors (i.e. scaling)
     and also to adding any constant to all elements
 
     Args:
@@ -268,13 +279,13 @@ def pearson_correlation_distance(u, v):
 
     """
 
-    logger.info(
+    logger.debug(
         "Compute the Pearson's correlation coefficient rho between the two input vectors u and v")
     rho = stats.pearsonr(u, v)[0]
-    logger.info(
+    logger.debug(
         "Pearson's correlation coefficient between u and v is rho = {:.5f}".format(rho))
     rho_d = 1 - rho
-    logger.info(
+    logger.debug(
         "Finally, return the Pearson's correlation distance between u and v = (1 - rho) = (1 - {:.5f}) = {:.5f}".format(rho, rho_d))
 
-    return round(rho_d, 5)
+    return rho_d

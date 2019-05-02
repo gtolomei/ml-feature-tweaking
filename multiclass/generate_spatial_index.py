@@ -97,7 +97,8 @@ def map_compute_spatial_index(instance, index_type=KDTree):
     label, X = instance
 
     logger.info(
-        "Computing {} for all transformations with label k = {}".format(index_type.__name__, label))
+        "Computing {} for all transformations with label k = {}".format(
+            index_type.__name__, label))
 
     return (label, index_type(X))
 
@@ -110,7 +111,8 @@ def main(options):
         options['transformations_filename']))
     transformations = load_transformations(options['transformations_filename'])
 
-    epsilon = options['transformations_filename'].split('eps_')[1].split('.')[0]
+    epsilon = options['transformations_filename'].split('eps_')[
+        1].split('.')[0]
 
     logger.info("*************** Transformations Info ***************")
     logger.info("epsilon = {}".format(epsilon))
@@ -134,21 +136,26 @@ def main(options):
     logger.info("==> Preparing the input to be sent to each worker of the pool")
 
     # dictionary of spatial indices, where each class label is a key
-    # and a tree (e.g., KDTree or BallTree) is created using the instances (i.e., transformations) generated from the model's internals
+    # and a tree (e.g., KDTree or BallTree) is created using the instances
+    # (i.e., transformations) generated from the model's internals
     index = {}
     # list of inputs sent to each worker [(input_w1), ..., (input_wm)]
     inputs = []
     # loop through every label
     for label in transformations:
         logger.info(
-            "Generate `{}` spatial index data structure from {}-labelled transformations".format(options['type'], label))
+            "Generate `{}` spatial index data structure from {}-labelled transformations".format(
+                options['type'], label))
         # check if there exists at least one valid instance
         if transformations[label] and len(transformations[label]) > 0:
-            # stack (vertically) all the instances (i.e., numpy arrays) which represent k-labelled transformations
+            # stack (vertically) all the instances (i.e., numpy arrays) which
+            # represent k-labelled transformations
             X = np.vstack(transformations[label])
             logger.info(
-                "Number of instances to be indexed for class label k = {}: {}".format(label, X.shape[0]))
-            # if so, just append the portion of the dataset (plus extra arguments) to the list of inputs
+                "Number of instances to be indexed for class label k = {}: {}".format(
+                    label, X.shape[0]))
+            # if so, just append the portion of the dataset (plus extra
+            # arguments) to the list of inputs
             inputs.append((label, X))
         else:
             logger.info(
@@ -160,7 +167,8 @@ def main(options):
     # Save all the spatial indices
     logger.info("==> Saving all the {} spatial index to `{}.gz`".format(
         options['type'], options['output_filename'] + '-eps_{}.idx'.format(epsilon)))
-    save_spatial_indices(index, options['output_filename'] + '-eps_{}.idx'.format(epsilon))
+    save_spatial_indices(
+        index, options['output_filename'] + '-eps_{}.idx'.format(epsilon))
 
 
 if __name__ == '__main__':
