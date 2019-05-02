@@ -242,11 +242,12 @@ class decision_tree_structure:
         return list_of_k_leaved_paths
 
 
-def load_model(model_file_name):
+def load_model(model_filename):
     """
         This function loads a model from a dump done via scikit-learn
     """
-    return joblib.load(model_file_name)
+    with open(model_filename, 'rb') as model_file:
+        return joblib.load(model_file)
 
 
 def enumerate_paths(model, tmp_filename='./model_paths.tmp'):
