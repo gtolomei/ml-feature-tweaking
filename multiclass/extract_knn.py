@@ -11,7 +11,6 @@ import sys
 import argparse
 import logging
 import time
-import gzip
 import numpy as np
 import pandas as pd
 
