@@ -8,9 +8,9 @@ KD_TREE_ROOT_FILENAME=indices/kd-tree-eps_
 BALL_TREE_ROOT_FILENAME=indices/ball-tree-eps_
 OUTPUT_ROOT_FILENAME=out/results
 
-EPSILON=(1)
-KNN=(1)
-N_SAMPLES=(50)
+EPSILON=(1 5 10)
+KNN=(1 2 5 10)
+N_SAMPLES=(100 250 500 1000 2000 5000)
 
 for e in ${EPSILON[@]}
 do
