@@ -110,11 +110,16 @@ def main(options):
         options['transformations_filename']))
     transformations = load_transformations(options['transformations_filename'])
 
+    epsilon = options['transformations_filename'].split('eps_')[1].split('.')[0]
+
     logger.info("*************** Transformations Info ***************")
+    logger.info("epsilon = {}".format(epsilon))
     for k in transformations:
         logger.info("n. of transformations for class label k = {}: {}".format(
             k, len(transformations[k])))
     logger.info("******************************************")
+
+    sys.exit(-1)
 
     logger.info("==> Generating `{}` spatial index".format(options['type']))
 

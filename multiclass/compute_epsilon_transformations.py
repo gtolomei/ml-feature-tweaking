@@ -426,10 +426,10 @@ def main(options):
         pool.map(map_compute_epsilon_transformations, inputs))
 
     # Finally, persist the just computed k-labelled transformations to disk
-    logger.info("Finally, serialize transformations to `{}-eps_{:d}.gz`".format(
-        options['output_filename'], options['epsilon']))
+    logger.info("Finally, serialize transformations to `{}-eps_{}.gz`".format(
+        options['output_filename'], int(options['epsilon'])))
     save_transformations(k_labelled_transformations,
-                         "{}-eps_{:d}".format(options['output_filename'], options['epsilon']))
+                         "{}-eps_{}".format(options['output_filename'], int(options['epsilon'])))
 
 
 if __name__ == '__main__':
