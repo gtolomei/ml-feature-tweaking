@@ -36,7 +36,7 @@ def configure_logging(level=logging.INFO):
 
     # log to file
     file_handler = logging.FileHandler(
-        filename="./extract_knn.log", mode="w")
+        filename="./logs/extract_knn.log", mode="w")
     file_handler.setLevel(level)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

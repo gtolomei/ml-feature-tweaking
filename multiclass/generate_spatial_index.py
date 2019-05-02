@@ -39,7 +39,7 @@ def configure_logging(level=logging.INFO):
 
     # log to file
     file_handler = logging.FileHandler(
-        filename="./generate_spatial_index.log", mode="w")
+        filename="./logs/generate_spatial_index.log", mode="w")
     file_handler.setLevel(level)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
