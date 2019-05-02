@@ -277,7 +277,7 @@ def create_synthetic_instance(x, path):
 ##########################################################################
 
 
-def compute_k_labelled_instances(X, model, paths, k, epsilon, size, dtype=int):
+def compute_k_labelled_instances(model, paths, k, epsilon, size, dtype=int):
 
     logger = logging.getLogger(__name__)
 
@@ -328,12 +328,13 @@ def map_compute_epsilon_transformations(instance):
 
     logger = logging.getLogger(__name__)
 
-    X, model, paths, label, epsilon, size, dtype = instance
+    # X, model, paths, label, epsilon, size, dtype = instance
+    model, paths, label, epsilon, size, dtype = instance
 
     logger.info(
         "Computing all the possible {}-labelled epsilon-transformations".format(label))
 
-    return ((label), compute_k_labelled_instances(X, model, paths, label, epsilon, size, dtype=dtype))
+    return ((label), compute_k_labelled_instances(model, paths, label, epsilon, size, dtype=dtype))
 
 ##########################################################################
 
@@ -389,9 +390,10 @@ def main(options):
 
     # Compute all the candidate epsilon-transformations of all the instances from their original label to any other target label
     logger.info(
-        "==> Compute all the candidate {}-transformations of all the instances from their original label to any other target label".format(options['epsilon']))
+        "==> Compute all the candidate epsilon-transformations to any target label [epsilon = {}]".format(options['epsilon']))
 
     dataset = dataset.iloc[:50, :]
+    X = dataset.iloc[:, 1:].values
 
     # dictionary of all k-labelled transformations {'label': [trans_1, trans_2, ..., trans_n]}
     # where each `trans_i` is a one-dimensional numpy array
@@ -400,20 +402,22 @@ def main(options):
     inputs = []
     # loop through every label
     for label in model.classes_:
-        logger.info(
-            "Transform all non-{}-labelled instances into {}-labelled ones".format(label, label))
-        # select only the subset of instances having a different label from the one currently under investigation
-        X = dataset[~(dataset["label"] == label)].iloc[:, 1:].values
-        # check if there exists at least one instance having such a property
-        if X.shape[0] > 0:
-            logger.info(
-                "Number of instances to be transformed to label k = {}: {}".format(label, X.shape[0]))
-            # if so, just append the portion of the dataset (plus extra arguments) to the list of inputs
-            inputs.append((X, model, paths[label], label,
-                           options['epsilon'], X.shape[1], X.dtype))
-        else:
-            logger.info(
-                "All the instances have already label k = {}".format(label))
+        logger.info("Generate k-labelled epsilon-transformations from extracted paths [k = {}; epsilon = {}]".format(label, options['epsilon']))
+        inputs.append((model, paths[label], label, options['epsilon'], X.shape[1], X.dtype))
+        # logger.info(
+        #     "Transform all non-{}-labelled instances into {}-labelled ones".format(label, label))
+        # # select only the subset of instances having a different label from the one currently under investigation
+        # X = dataset[~(dataset["label"] == label)].iloc[:, 1:].values
+        # # check if there exists at least one instance having such a property
+        # if X.shape[0] > 0:
+        #     logger.info(
+        #         "Number of instances to be transformed to label k = {}: {}".format(label, X.shape[0]))
+        #     # if so, just append the portion of the dataset (plus extra arguments) to the list of inputs
+        #     inputs.append((X, model, paths[label], label,
+        #                    options['epsilon'], X.shape[1], X.dtype))
+        # else:
+        #     logger.info(
+        #         "All the instances have already label k = {}".format(label))
 
     # the output of all the workers will be a tuple of tuples ('label', [trans_1, trans_2, ..., trans_n])
     # by applying a `dict` operator this will be transformed into a dictionary as expected
