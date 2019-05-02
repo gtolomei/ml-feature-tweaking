@@ -392,7 +392,6 @@ def main(options):
     logger.info(
         "==> Compute all the candidate epsilon-transformations to any target label [epsilon = {}]".format(options['epsilon']))
 
-    dataset = dataset.iloc[:50, :]
     X = dataset.iloc[:, 1:].values
 
     # dictionary of all k-labelled transformations {'label': [trans_1, trans_2, ..., trans_n]}
