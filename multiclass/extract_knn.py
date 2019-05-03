@@ -11,6 +11,7 @@ import sys
 import argparse
 import logging
 import time
+import gzip
 import numpy as np
 import pandas as pd
 import distance_functions
@@ -288,12 +289,20 @@ def get_target_labels(y, labels):
 ##########################################################################
 
 
-def save_results(results, output_filename):
+def save_time_results(results, output_filename):
 
     header = "method,k_nn,n_samples,epsilon,elapsed_time (secs.)\n"
     with open(output_filename, "w") as out:
         out.write(header)
         out.write("{},{},{},{},{}\n".format(results[0], results[1], results[2], results[3], results[4]))
+
+
+##########################################################################
+
+
+def save_knn(knn, output_filename):
+    with gzip.GzipFile(output_filename + '.gz', 'wb') as output_file:
+        joblib.dump(knn, output_file)
 
 
 ##########################################################################
@@ -373,9 +382,13 @@ def main(options):
             elapsed_time %
             60))
 
-    output_filename = "{}-{}-{}-nn_{}.csv".format(options['output_filename'], method, options['knn'], int(time.time()))
-    logger.info("Saving results to `{}`".format(output_filename))
-    save_results((method, options['knn'], options['n_samples'], epsilon, elapsed_time), output_filename)
+    output_filename = "{}-{}-{}-nn-{}-eps-{}".format(options['output_filename'], method, options['knn'], options['n_samples'], epsilon)
+
+    logger.info("Saving execution time results to `{}.csv`".format(output_filename))
+    save_time_results((method, options['knn'], options['n_samples'], epsilon, elapsed_time), output_filename + '.csv')
+
+    logger.info("Saving extracted k-NN to `{}.knn`".format(output_filename))
+    save_knn(knn, output_filename + '.knn')
 
 
 if __name__ == '__main__':
