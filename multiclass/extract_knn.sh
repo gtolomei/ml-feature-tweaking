@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PARALLEL=4
+PARALLEL=8
 
 if [ $# -eq 0 ]
   then
