@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PARALLEL=8
+PARALLEL=4
 
 if [ $# -eq 0 ]
   then
@@ -35,8 +35,8 @@ TRANSFORMATIONS_FILENAMES=out/transformations-eps_${EPSILON}.gz
 INDICES=("" indices/kd-tree-eps_${EPSILON}.idx.gz indices/ball-tree-eps_${EPSILON}.idx.gz)
 OUTPUT_ROOT_FILENAME=out/results
 
-KNN=(1 2 5 10)
-N_SAMPLES=(100 250 500 1000 2000 4000)
+KNN=(1 5 10)
+N_SAMPLES=(100 250 500 1000 2000 2500 3000 4000)
 
 echo "*********** Extracting k-NN [epsilon = ${EPSILON}] ***********"
 echo ""

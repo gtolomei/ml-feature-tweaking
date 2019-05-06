@@ -356,7 +356,7 @@ def main(options):
         spatial_index = load_spatial_index(options['index_filename'])
         method = "-".join(options['index_filename'].split('/')[-1].split('-')[:2])
 
-    start_time = time.time()
+    start_time = time.process_time()
     knn = get_knn(
         X_query,
         y_query,
@@ -369,7 +369,7 @@ def main(options):
             '_distance'),
         k=options['knn'],
         spatial_index=spatial_index)
-    end_time = time.time()
+    end_time = time.process_time()
     elapsed_time = int(end_time - start_time)
     logger.info(
         "Total elapsed time for computing k-NN [k={}]: {:02d}:{:02d}:{:02d}".format(
