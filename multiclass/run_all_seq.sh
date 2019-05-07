@@ -26,7 +26,7 @@ do
                 echo ""
                 echo "./${PYTHON_SCRIPT} "${TEST_SET_FILENAME}" "${TRANSFORMATIONS_FILENAME}" "${OUTPUT_ROOT_FILENAME}" -n "${n}" -k "${k}" -i '"${i}"'"
                 echo ""
-                ./${PYTHON_SCRIPT} "${TEST_SET_FILENAME}" "${TRANSFORMATIONS_FILENAME}" "${OUTPUT_ROOT_FILENAME}" -n "${n}" -k "${k}" -i '"${i}"'
+                ./${PYTHON_SCRIPT} "${TEST_SET_FILENAME}" "${TRANSFORMATIONS_FILENAME}" "${OUTPUT_ROOT_FILENAME}" -n "${n}" -k "${k}" -i "${i}"
                 echo ""
             done
         done
