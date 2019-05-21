@@ -300,6 +300,7 @@ def main(options):
                 options['tweakings_filename'])
     # Loading transformed dataset
     tweaked_dataset = loading_dataset(options['tweakings_filename'])
+    tweaked_dataset.set_index("id", inplace=True)
 
     logger.info(
         "Retrieving the portion of dataset indexed by the tweaked dataset")
@@ -313,8 +314,6 @@ def main(options):
         "Selecting features of only (true) negative instances from the portion of dataset indexed")
     # Features
     X = dataset.iloc[:, :len(dataset.columns) - 1]
-
-    #tweaked_dataset.set_index("id", inplace=True)
 
     tweaked_costs_df, tweaked_signs_df = create_tweaked_costs_dataframe(
         X, tweaked_dataset, options['costfuncs'])
